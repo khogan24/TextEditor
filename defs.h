@@ -16,6 +16,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <sys/ioctl.h>
+#include <string.h>
 #endif
 
 struct{
@@ -23,6 +24,39 @@ struct{
     int row;
     int col;
 }editorcfg;
+
+struct ll {
+    char* b;
+    int n;
+    int len;
+} appendbuf;
+
+#define max(a,b) (a>b)? a:b
+
+/**
+ * Appends to the end of a linked list
+ *  appends at leaset 512 bytes more than was needed, and only appends if the current write is long enough
+ * @param buff the linked list to be appended to
+ * @param s the new data to be appended
+ * @param the length of s
+ * @return 0 on success, -1 of failure
+*/
+int append(struct ll *buff, const char* s, int len)
+{
+    char *newm;
+    int nlen;
+    if(buff->len + len > buff->n)
+    {
+        nlen = max(512, len);
+        newm = realloc(buff->b,buff->len + nlen + 512);
+        if( newm == NULL) return -1;
+    }
+    memcpy(&newm[buff->len],s,nlen);
+    buff->b = newm;
+    buff->n += nlen;
+    buff->len+=nlen;
+    return 0;
+}
 
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
 

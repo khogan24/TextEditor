@@ -90,12 +90,20 @@ void handlekey(const char c)
     }
 }
 
+void bufferinit(void)
+{
+    appendbuf.b = malloc(sizeof(char)*512);
+    appendbuf.n = 512;
+    appendbuf.len = 0;
+}
+
 /**
  * 
 */
 int main(void)
 {
     rawmodeinit();
+    bufferinit();
     editoruiinit();
     while(1)
     {
