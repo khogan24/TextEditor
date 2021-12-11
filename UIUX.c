@@ -31,37 +31,18 @@ void editoruiinit(void)
 */
 int cursorpos(int* r, int *c)
 {   
-    *r = -1;
-    *c = -1;
-    return -1;
-    if(write(STDOUT_FILENO,"\x1b[6n", 4) != 4)
-    {
-        *r = -1;
-        *c = -1;
-        return -1;
+    char buf[32];
+    unsigned int i = 0;
+    if (write(STDOUT_FILENO, "\x1b[6n", 4) != 4) return -1;
+    while (i < sizeof(buf) - 1) {
+    if (read(STDIN_FILENO, &buf[i], 1) != 1) break;
+    if (buf[i] == 'R') break;
+    i++;
     }
-    char buffer[32];
-    // printf("\r\n");
-    int i = 0;
-
-    while(i < NELEM(buffer)-1)
-    {
-        if(read(STDIN_FILENO,&buffer[i],1) != -1)break;
-        if(buffer[i] == 'R') break;
-        ++i;
-    }
-    buffer[i] = '\0';
-    int ind;
-    if(i <= 0 || (ind= indexof(';',&buffer[2])) == -1  || buffer[0] != '\x1b' || buffer[1] != '[')
-    {
-        *r = -1;
-        *c = -1;
-        return -1;
-    }
-    
-    if(sscanf(&buffer[2],"%d;%d",r,c) != 2)
-        return -1;
-
+    buf[i] = '\0';
+    if (buf[0] != '\x1b' || buf[1] != '[') return -1;
+    if (sscanf(&buf[2], "%d;%d", r, c) != 2) return -1;
+    printf("row %d, col %d\n",*r,*c);
     return 0;
 }
 /**
@@ -74,11 +55,11 @@ int cursorpos(int* r, int *c)
 int windowsize(int *r, int *c)
 {
     struct winsize w;
-    if(ioctl(STDOUT_FILENO,TIOCGWINSZ, &w) == -1 || w.ws_col == 0)
+    if(ioctl(STDOUT_FILENO,TIOCGWINSZ, &w) == -1 || w.ws_col == 0)// ez way, not all systems support
     {
-        *r = -1;
-        *c = -1;
-        return -1;
+        if(write(STDOUT_FILENO, "\x1b[999C\x1b[999B", 12) != 12)// write whitespace to fill terminal, backspace to find size
+            return -1;
+        return cursorpos(r, c);
     }
     *r = w.ws_row;
     *c = w.ws_col;

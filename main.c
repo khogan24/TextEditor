@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <sys/ioctl.h>
 #include "defs.h"
+#include "editor.h"
 
 // struct termios original_term_settings;
 
@@ -73,41 +74,64 @@ char readkey(void)
     }
     return c;
 }
-
+#define BACKSPACE 0x08
 void handlekey(const char c)
 {
-    printf("handle\r\n");
     switch (c)
     {
         case '!':
             exit(0);
         break;
+        case BACKSPACE:
+        printf("ahahhahahahhaaha");
+        while(1)
+            ;
         
         default:
-           write(STDOUT_FILENO,&c,1);
-           if(c == '\n')
-            write(STDOUT_FILENO,"\r",1);
+            putcat(c,editorcfg.ccol,&writetobuf);
+            if(c == '\n')
+            {
+                putcat('\r',editorcfg.ccol,&writetobuf);
+            }
     }
 }
 
 void bufferinit(void)
 {
-    appendbuf.b = malloc(sizeof(char)*512);
-    appendbuf.n = 512;
-    appendbuf.len = 0;
+    writetobuf.data = malloc(sizeof(char)*512);
+    writetobuf.n = 512;
+    writetobuf.len = 0;
+}
+
+/**
+ * @brief writes the buffer to the screen,
+ *        clearing the buffer when done
+ */
+void buffwrite()
+{
+    write(STDOUT_FILENO,writetobuf.data,writetobuf.len);
+    // llfree(&appendbuf);// do i need free//
+    writetobuf.len = 0;
+    writetobuf.n = 0;
+    // appendbuf.data;
 }
 
 /**
  * 
 */
-int main(void)
+int main(int argc, char** argv)
 {
+    original_fd = -1;
+    if(argc == 2){
+        original_fd = open(argv[1], O_RDWR | O_CREAT);
+    }
     rawmodeinit();
     bufferinit();
     editoruiinit();
     while(1)
     {
         handlekey(readkey());
+        buffwrite();
     }
     return 0;
 }

@@ -4,58 +4,71 @@
 
 #ifndef _INCL_
 #define _INCL_
-#include <stdlib.h>
-#include <stdio.h>
-#include <termios.h>
-#include <unistd.h>
 #include <ctype.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <unistd.h>
-#include <signal.h>
-#include <errno.h>
+#include <sys/stat.h>
 #include <sys/ioctl.h>
+#include <signal.h>
 #include <string.h>
+#include <termios.h>
+#include <unistd.h>
+
+#include "editor.h"
 #endif
 
 struct{
     struct termios default_termios;
-    int row;
-    int col;
+    int row; // total rows
+    int col;    // total columns
+    int crow;   //cursor row
+    int ccol;   //cursor column
 }editorcfg;
 
 struct ll {
-    char* b;
+    char* data;
     int n;
     int len;
-} appendbuf;
+}writetobuf;
 
 #define max(a,b) (a>b)? a:b
 
 /**
- * Appends to the end of a linked list
- *  appends at leaset 512 bytes more than was needed, and only appends if the current write is long enough
+ * @brief Appends to the end of a linked list
+ *
  * @param buff the linked list to be appended to
  * @param s the new data to be appended
  * @param the length of s
+ * 
  * @return 0 on success, -1 of failure
 */
 int append(struct ll *buff, const char* s, int len)
 {
     char *newm;
-    int nlen;
     if(buff->len + len > buff->n)
     {
-        nlen = max(512, len);
-        newm = realloc(buff->b,buff->len + nlen + 512);
+        newm = realloc(buff->data,buff->len+len);
         if( newm == NULL) return -1;
     }
-    memcpy(&newm[buff->len],s,nlen);
-    buff->b = newm;
-    buff->n += nlen;
-    buff->len+=nlen;
+    memcpy(&newm[buff->len],s,len);
+    buff->data = newm;
+    buff->n += len;
+    buff->len+=len;
     return 0;
+}
+/**
+ * @brief frees the data in the linked list
+ * 
+ * @param a pointer to the linked list to be freed
+ */
+void llfree(struct ll* a)
+{
+    free(a->data);
 }
 
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
@@ -86,5 +99,7 @@ int windowsize(int*, int*);
 int cursorpos(int*, int *);
 void editoruiinit(void);
 void clearterm(void);
+int putcat(char c, int at, struct ll * buf);
+int original_fd;
 
 #endif
