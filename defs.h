@@ -101,5 +101,10 @@ void editoruiinit(void);
 void clearterm(void);
 int putcat(char c, int at, struct ll * buf);
 int original_fd;
+struct {
+    int size;
+    char* buffer;
+} temp_file;
+
 
 #endif

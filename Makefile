@@ -11,6 +11,9 @@ run:
 clean:
 	rm *.o *.so
 
+runfile:
+	./main.o foo.txt
+
 update:
 	git pull
 	git fetch

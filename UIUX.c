@@ -16,9 +16,16 @@ void editoruiinit(void)
         panic("ERR: winsize");
     }
     int i = 1;
+    if(original_fd < 0){
+
     for(;i < editorcfg.row; ++i)
         write(STDOUT_FILENO,"-\r\n",3);
     write(STDOUT_FILENO,"-",1);
+    }
+    else{
+        clearterm();
+        write(STDOUT_FILENO,temp_file.buffer,temp_file.size);
+    }
 }
 
 /**

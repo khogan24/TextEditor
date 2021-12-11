@@ -88,11 +88,11 @@ void handlekey(const char c)
             ;
         
         default:
-            putcat(c,editorcfg.ccol,&writetobuf);
             if(c == '\n')
             {
                 putcat('\r',editorcfg.ccol,&writetobuf);
             }
+            putcat(c,editorcfg.ccol,&writetobuf);
     }
 }
 
@@ -117,13 +117,48 @@ void buffwrite()
 }
 
 /**
+ * @brief copies the contents of the file pointed to by fd into the in-memory buffer.
+ * This is to allow fordiscarding of edits
+ * 
+ * @param fd file descriptor of the file opened
+ */
+// there is a smarter way, to use a swp file and only load visible and near visible chars, but eh
+// what if i mmap lazily?
+void copytotemp(int fd, int size){
+    temp_file.size = size;
+    temp_file.buffer = (char*)malloc((sizeof(char) * temp_file.size) +1);
+    if(read(fd,temp_file.buffer,12) == -1){
+        printf("error copying file to ram errno: %d\n",errno);
+        free(temp_file.buffer);
+        rawmodedel();
+        exit(1);
+    }
+    close(fd);
+    temp_file.buffer[size-1] = '\r';
+    temp_file.buffer[size] = '\n';
+
+    write(STDOUT_FILENO,temp_file.buffer,temp_file.size+1);
+}
+
+/**
  * 
 */
 int main(int argc, char** argv)
 {
     original_fd = -1;
+    struct stat fileinf;
     if(argc == 2){
-        original_fd = open(argv[1], O_RDWR | O_CREAT);
+        original_fd = open(argv[1], O_RDWR | O_CREAT | O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRUSR );
+        if(fstat(original_fd,&fileinf) == -1){
+            printf("error opening file %s\n", argv[1]);
+            return 0;
+        }
+        if(fileinf.st_mode  ==  S_IFDIR ){
+            printf("will not open a directory\n");
+            return 0;
+        }
+        printf("size = %d\n",(int)(long)fileinf.st_size);
+        copytotemp(original_fd,(int)(long)fileinf.st_size);
     }
     rawmodeinit();
     bufferinit();
@@ -133,5 +168,6 @@ int main(int argc, char** argv)
         handlekey(readkey());
         buffwrite();
     }
+    free(temp_file.buffer);
     return 0;
 }
