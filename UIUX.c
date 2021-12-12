@@ -24,7 +24,14 @@ void editoruiinit(void)
     }
     else{
         clearterm();
-        write(STDOUT_FILENO,temp_file.buffer,temp_file.size);
+         int i = 0; 
+        for(;i<temp_file.size + 1;++i)// need this because no default carriage return
+        {
+            write(STDOUT_FILENO,temp_file.buffer + i,1);
+            if(temp_file.buffer[i] == '\n')
+                write(STDOUT_FILENO,"\r",1);
+
+        }
     }
 }
 

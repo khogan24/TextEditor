@@ -82,7 +82,7 @@ void handlekey(const char c)
         case '!':
             exit(0);
         break;
-        case BACKSPACE:
+        case BACKSPACE: // debug, never actually gets here
         printf("ahahhahahahhaaha");
         while(1)
             ;
@@ -109,6 +109,7 @@ void bufferinit(void)
  */
 void buffwrite()
 {
+    printf("IN BUFWRITE ___________________________\n\n\n\n\n\r");
     write(STDOUT_FILENO,writetobuf.data,writetobuf.len);
     // llfree(&appendbuf);// do i need free//
     writetobuf.len = 0;
@@ -126,18 +127,16 @@ void buffwrite()
 // what if i mmap lazily?
 void copytotemp(int fd, int size){
     temp_file.size = size;
-    temp_file.buffer = (char*)malloc((sizeof(char) * temp_file.size) +1);
-    if(read(fd,temp_file.buffer,12) == -1){
+    temp_file.buffer = (char*)malloc((sizeof(char) * temp_file.size) +2);
+    if(read(fd,temp_file.buffer,size) == -1){
         printf("error copying file to ram errno: %d\n",errno);
         free(temp_file.buffer);
         rawmodedel();
         exit(1);
     }
     close(fd);
-    temp_file.buffer[size-1] = '\r';
+    temp_file.buffer[size+1] = '\r';
     temp_file.buffer[size] = '\n';
-
-    write(STDOUT_FILENO,temp_file.buffer,temp_file.size+1);
 }
 
 /**
@@ -157,7 +156,6 @@ int main(int argc, char** argv)
             printf("will not open a directory\n");
             return 0;
         }
-        printf("size = %d\n",(int)(long)fileinf.st_size);
         copytotemp(original_fd,(int)(long)fileinf.st_size);
     }
     rawmodeinit();
