@@ -21,6 +21,10 @@ int putcat(char c, int at, struct ll * buf)
     */
 
     buf->len++;
+    // editorcfg.ccol++;
+    // if(editorcfg.ccol > editorcfg.col){
+    //     editorcfg.col++;
+    // }
     buf->data[at] = c;
     // editorUpdateRow(buf);
     return 0;

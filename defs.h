@@ -28,19 +28,19 @@ struct ll {
     int len;
 }writetobuf;
 
-struct{
+struct edcfg{
     struct termios default_termios;
     int row; // total rows
     int col;    // total columns
     int crow;   //cursor row
     int ccol;   //cursor column
-    struct ll buff;
+    struct ll* fileconts;
 }editorcfg;
 
 #define max(a,b) (a>b)? a:b
 
 /**
- * @brief Appends to the end of a linked list
+ * @brief Appends to the end of a linked list, auto increments length
  *
  * @param buff the linked list to be appended to
  * @param s the new data to be appended

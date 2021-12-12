@@ -77,13 +77,37 @@ char readkey(void)
 #define BACKSPACE 127
 void handlekey(const char c)
 {
+    int r;
+    int co; 
     switch (c)
     {
         case '!':
             exit(0);
         break;
+        case '?':
+        if(cursorpos(&r,&co) != 0)
+        {
+           break;
+        }
+        if(r == 0)
+            r++;
+        if(co == 0)
+            co++;
+        printf("%c\r\n",editorcfg.fileconts[r-1].data[co-1]);
+        break;
         case BACKSPACE: // debug, never actually gets here
-            writetobuf.data[writetobuf.len--] = '\0';
+            if(cursorpos(&r,&co) != 0)
+        {
+           break;
+        }
+        if(r == 1)
+            r++;
+        if(co == 1)
+            co++;
+        editorcfg.fileconts[r-1].data[co-1] = ' ';
+        write(STDOUT_FILENO," ",1);
+        if(editorcfg.ccol != 0)
+        editorcfg.ccol--;
         //    putcat('!',editorcfg.ccol+1,&writetobuf);
         // writetobuf.data[0] = ' ';
         // printf("buff == %s\n",writetobuf.data);
@@ -104,7 +128,6 @@ void bufferinit(void)
     writetobuf.data = malloc(sizeof(char)*2);
     writetobuf.n = 2;
     writetobuf.len = 0;
-    editorcfg.buff = writetobuf;
 }
 
 /**
@@ -128,17 +151,37 @@ void buffwrite()
 // there is a smarter way, to use a swp file and only load visible and near visible chars, but eh
 // what if i mmap lazily?
 void copytotemp(int fd, int size){
-    temp_file.size = size;
-    temp_file.buffer = (char*)malloc((sizeof(char) * temp_file.size) +2);
+    temp_file.size = size+2;
+    temp_file.buffer = (char*)malloc((sizeof(char)* size) + 2);
     if(read(fd,temp_file.buffer,size) == -1){
         printf("error copying file to ram errno: %d\n",errno);
-        free(temp_file.buffer);
         rawmodedel();
         exit(1);
     }
-    close(fd);
-    temp_file.buffer[size+1] = '\r';
     temp_file.buffer[size] = '\n';
+    temp_file.buffer[size+1] = '\r';
+    close(fd);
+    //
+    int i = 0;
+    char c;
+    int rowcount = 0;
+    for(;i < temp_file.size+1; ++i){
+        c= temp_file.buffer[i];
+        if(c == '\n'){
+           rowcount++;
+        }
+    }
+    int row = 0;
+    editorcfg.fileconts = (struct ll*)malloc(sizeof(struct ll) * rowcount);// alloc once, instead of many times in loop, may have to alloc more, as use edits
+    for(i=0;i < temp_file.size+1; ++i){
+        c= temp_file.buffer[i];
+        if(c == '\n'){
+            row++;
+            continue;
+        }
+        append(&editorcfg.fileconts[row],&c,1);
+    }
+
 }
 
 /**

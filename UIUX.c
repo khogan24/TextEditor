@@ -56,7 +56,7 @@ int cursorpos(int* r, int *c)
     buf[i] = '\0';
     if (buf[0] != '\x1b' || buf[1] != '[') return -1;
     if (sscanf(&buf[2], "%d;%d", r, c) != 2) return -1;
-    printf("row %d, col %d\n",*r,*c);
+    // printf("row %d, col %d\n",*r,*c);
     return 0;
 }
 /**
