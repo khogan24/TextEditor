@@ -22,19 +22,20 @@
 #include "editor.h"
 #endif
 
+struct ll {
+    char* data;
+    int n;
+    int len;
+}writetobuf;
+
 struct{
     struct termios default_termios;
     int row; // total rows
     int col;    // total columns
     int crow;   //cursor row
     int ccol;   //cursor column
+    struct ll buff;
 }editorcfg;
-
-struct ll {
-    char* data;
-    int n;
-    int len;
-}writetobuf;
 
 #define max(a,b) (a>b)? a:b
 

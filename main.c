@@ -74,7 +74,7 @@ char readkey(void)
     }
     return c;
 }
-#define BACKSPACE 0x08
+#define BACKSPACE 127
 void handlekey(const char c)
 {
     switch (c)
@@ -83,10 +83,13 @@ void handlekey(const char c)
             exit(0);
         break;
         case BACKSPACE: // debug, never actually gets here
-        printf("ahahhahahahhaaha");
-        while(1)
-            ;
-        
+            writetobuf.data[writetobuf.len--] = '\0';
+        //    putcat('!',editorcfg.ccol+1,&writetobuf);
+        // writetobuf.data[0] = ' ';
+        // printf("buff == %s\n",writetobuf.data);
+        // exit(1);
+            // do i have to re write this line?
+        break;
         default:
             if(c == '\n')
             {
@@ -98,9 +101,10 @@ void handlekey(const char c)
 
 void bufferinit(void)
 {
-    writetobuf.data = malloc(sizeof(char)*512);
-    writetobuf.n = 512;
+    writetobuf.data = malloc(sizeof(char)*2);
+    writetobuf.n = 2;
     writetobuf.len = 0;
+    editorcfg.buff = writetobuf;
 }
 
 /**
@@ -112,7 +116,6 @@ void buffwrite()
     write(STDOUT_FILENO,writetobuf.data,writetobuf.len);
     // llfree(&appendbuf);// do i need free//
     writetobuf.len = 0;
-    writetobuf.n = 0;
     // appendbuf.data;
 }
 
