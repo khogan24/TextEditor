@@ -109,7 +109,6 @@ void bufferinit(void)
  */
 void buffwrite()
 {
-    printf("IN BUFWRITE ___________________________\n\n\n\n\n\r");
     write(STDOUT_FILENO,writetobuf.data,writetobuf.len);
     // llfree(&appendbuf);// do i need free//
     writetobuf.len = 0;
