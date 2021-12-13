@@ -79,16 +79,26 @@ void handlekey(const char c)
 {
     int r;
     int co; 
+    if(cursorpos(&editorcfg.crow,&editorcfg.ccol) != 0)
+    {
+        return;
+    }
+    printf("at %d\r\n",editorcfg.crow);
+    if (editorcfg.crow > editorcfg.row){
+        exit(1);
+        editorcfg.crow = editorcfg.row-1;
+    }
+    if (editorcfg.ccol > editorcfg.col){
+       editorcfg.ccol =0;
+    }
+
     switch (c)
     {
         case '!':
             exit(0);
         break;
         case '?':
-        if(cursorpos(&r,&co) != 0)
-        {
-           break;
-        }
+        
         if(r == 0)
             r++;
         if(co == 0)
@@ -97,37 +107,42 @@ void handlekey(const char c)
         break;
         case BACKSPACE: // debug, never actually gets here
             if(cursorpos(&r,&co) != 0)
-        {
-           break;
-        }
-        if(r == 1)
-            r++;
-        if(co == 1)
-            co++;
-        editorcfg.fileconts[r-1].data[co-1] = ' ';
-        write(STDOUT_FILENO," ",1);
-        if(editorcfg.ccol != 0)
-        editorcfg.ccol--;
-        //    putcat('!',editorcfg.ccol+1,&writetobuf);
-        // writetobuf.data[0] = ' ';
-        // printf("buff == %s\n",writetobuf.data);
-        // exit(1);
-            // do i have to re write this line?
+            {
+                break;
+            }
+            if(r == 1)
+                r++;
+            if(co == 1)
+                co++;
+            editorcfg.fileconts[r-1].data[co-1] = ' ';
+            write(STDOUT_FILENO," ",1);
+            if(editorcfg.ccol != 0)
+                editorcfg.ccol--;
         break;
         default:
+        printf("DEFAULT\r\n");
+        printf("at %d\r\n",editorcfg.crow);
             if(c == '\n')
             {
-                putcat('\r',editorcfg.ccol,&writetobuf);
+                putcat('\r',editorcfg.ccol-1,&editorcfg.fileconts[editorcfg.crow-1]);
             }
-            putcat(c,editorcfg.ccol,&writetobuf);
+            printf("cur %d,%d, max %d,%d\r\n",editorcfg.ccol,editorcfg.crow,editorcfg.col,editorcfg.row);
+            printf("len: %d\r\n",editorcfg.fileconts[0].len);
+
+            printf("PUTCAT\r\n");
+            putcat('\r',editorcfg.ccol-1,&editorcfg.fileconts[editorcfg.crow-1]);
+            editorcfg.crow++;
+            if(editorcfg.row  == editorcfg.crow){
+                // TODO : append to filconts
+              exit(1);
+            }
+            editorcfg.ccol = 0;
     }
 }
 
 void bufferinit(void)
 {
-    writetobuf.data = malloc(sizeof(char)*2);
-    writetobuf.n = 2;
-    writetobuf.len = 0;
+;
 }
 
 /**
@@ -136,9 +151,10 @@ void bufferinit(void)
  */
 void buffwrite()
 {
-    write(STDOUT_FILENO,writetobuf.data,writetobuf.len);
+    printf("WRITE\r\n");
+
+    write(STDOUT_FILENO,editorcfg.fileconts[editorcfg.crow].data,editorcfg.fileconts[editorcfg.crow].len);
     // llfree(&appendbuf);// do i need free//
-    writetobuf.len = 0;
     // appendbuf.data;
 }
 
@@ -172,7 +188,7 @@ void copytotemp(int fd, int size){
         }
     }
     int row = 0;
-    editorcfg.fileconts = (struct ll*)malloc(sizeof(struct ll) * rowcount);// alloc once, instead of many times in loop, may have to alloc more, as use edits
+    editorcfg.fileconts = (struct list*)malloc(sizeof(struct list) * rowcount);// alloc once, instead of many times in loop, may have to alloc more, as use edits
     for(i=0;i < temp_file.size+1; ++i){
         c= temp_file.buffer[i];
         if(c == '\n'){

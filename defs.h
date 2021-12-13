@@ -22,11 +22,11 @@
 #include "editor.h"
 #endif
 
-struct ll {
+struct list {
     char* data;
     int n;
     int len;
-}writetobuf;
+};
 
 struct edcfg{
     struct termios default_termios;
@@ -34,7 +34,7 @@ struct edcfg{
     int col;    // total columns
     int crow;   //cursor row
     int ccol;   //cursor column
-    struct ll* fileconts;
+    struct list* fileconts;
 }editorcfg;
 
 #define max(a,b) (a>b)? a:b
@@ -48,7 +48,7 @@ struct edcfg{
  * 
  * @return 0 on success, -1 of failure
 */
-int append(struct ll *buff, const char* s, int len)
+int append(struct list *buff, const char* s, int len)
 {
     char *newm;
     if(buff->len + len > buff->n)
@@ -67,7 +67,7 @@ int append(struct ll *buff, const char* s, int len)
  * 
  * @param a pointer to the linked list to be freed
  */
-void llfree(struct ll* a)
+void llfree(struct list* a)
 {
     free(a->data);
 }
@@ -100,7 +100,7 @@ int windowsize(int*, int*);
 int cursorpos(int*, int *);
 void editoruiinit(void);
 void clearterm(void);
-int putcat(char c, int at, struct ll * buf);
+int putcat(char c, int at, struct list * buf);
 int original_fd;
 struct {
     int size;

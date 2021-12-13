@@ -1,1 +1,4 @@
 Is tempfile needed? have buffer in edtorcfg
+dont need wtb, have better on in ecfg
+Write to buffer -> write buffer to tempfile + screen
+currently just writes to buffer then to screen, but never use buffer for anything other than a go between, has no use
