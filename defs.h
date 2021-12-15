@@ -22,6 +22,18 @@
 #include "editor.h"
 #endif
 
+#define max(a,b) (a>b)? a:b
+#define NELEM(x) (sizeof(x)/sizeof((x)[0]))
+#define CTRL_KEY(k) (((char)k) & 0x1f)
+#define BUFFER_SIZE 4096
+
+// these are dummy values, need to create actual cases, will have to interface with keyboard via termios
+#define UPARROW    0
+#define DOWNARROW  1
+#define LEFTARROW  2
+#define RIGHTARROW 3
+
+
 struct list {
     char* data;
     int n;
@@ -30,14 +42,13 @@ struct list {
 
 struct edcfg{
     struct termios default_termios;
-    int row; // total rows
-    int col;    // total columns
+    int rows; // total rows
+    int col;    // total columns, not needed, nor useful
     int crow;   //cursor row
     int ccol;   //cursor column
     struct list* fileconts;
 }editorcfg;
 
-#define max(a,b) (a>b)? a:b
 
 /**
  * @brief Appends to the end of a linked list, auto increments length
@@ -72,10 +83,11 @@ void llfree(struct list* a)
     free(a->data);
 }
 
-#define NELEM(x) (sizeof(x)/sizeof((x)[0]))
+
 
 /**
- * Gets the index of target in an array
+ * @brief 
+ * 
  * @param target the element we are searching for
  * @param buf the array to look through
  * @returns index of target in buffer, -1 if not found
@@ -93,14 +105,13 @@ const int indexof(const char target,const char* buf)
     
 }
 
-#define CTRL_KEY(k) (((char)k) & 0x1f)
 
 const void panic(const char*);
 int windowsize(int*, int*);
 int cursorpos(int*, int *);
 void editoruiinit(void);
 void clearterm(void);
-int putcat(char c, int at, struct list * buf);
+int putcat(const char c, const int at);
 int original_fd;
 struct {
     int size;

@@ -3,33 +3,22 @@
 /**
  * @param c character to print to screen
  * @param at position in write-to-buffer to to c
- * @param buf the write to buffer
  * @return 0 on success, -1 on error
- * -- currently is O(n) for each char
+ *Amertized runtime, doubles each growth
 */
-int putcat(char c, int at, struct list * buf)
+int putcat(const char c, const int at)
 {
-    if (at < 0 || at > buf->len) at = buf->len;
-        buf->data = realloc(buf->data, buf->len + 2);
-    printf("COPY\r\n");
-    memmove(&buf->data[at + 1], &buf->data[at], buf->len - at + 1);
-    /**
-     * @note 
-         store pointers to location in LL, update O(1)
-         makes size double
-            extra bookkeeping to ensure accuracy
-        why have buffer if we just write every loop?
-    */
-
-    buf->len++;
-    // editorcfg.ccol++;
-    // if(editorcfg.ccol > editorcfg.col){
-    //     editorcfg.col++;
-    printf("insrt\r\n");
-    buf->data[at] = c;
-    // }
-    // editorUpdateRow(buf);
-    return 0;
+    int crow = editorcfg.crow;
+    if(at > editorcfg.fileconts[crow].n){
+        char* temp = malloc(sizeof(char)*editorcfg.fileconts[crow].n *2);
+        memcpy(temp,editorcfg.fileconts[crow].data,editorcfg.fileconts[crow].n);
+        free (editorcfg.fileconts[crow].data);
+        editorcfg.fileconts[crow].data = temp;
+        editorcfg.fileconts[crow].n *=2;
+    }
+    editorcfg.fileconts[crow].data[at] = c;
+    editorcfg.fileconts[crow].len++;
+    return 1;
 }
 
 void editorUpdateRow(struct list* buff)

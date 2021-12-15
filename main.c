@@ -77,66 +77,50 @@ char readkey(void)
 #define BACKSPACE 127
 void handlekey(const char c)
 {
-    int r;
-    int co; 
-    if(cursorpos(&editorcfg.crow,&editorcfg.ccol) != 0)
-    {
-        return;
-    }
-    printf("at %d\r\n",editorcfg.crow);
-    if (editorcfg.crow > editorcfg.row){
-        exit(1);
-        editorcfg.crow = editorcfg.row-1;
-    }
-    if (editorcfg.ccol > editorcfg.col){
-       editorcfg.ccol =0;
-    }
-
     switch (c)
     {
         case '!':
             exit(0);
         break;
-        case '?':
-        
-        if(r == 0)
-            r++;
-        if(co == 0)
-            co++;
-        printf("%c\r\n",editorcfg.fileconts[r-1].data[co-1]);
-        break;
-        case BACKSPACE: // debug, never actually gets here
-            if(cursorpos(&r,&co) != 0)
-            {
-                break;
+        case UPARROW:
+            if(editorcfg.crow != 0){
+            editorcfg.crow--;
             }
-            if(r == 1)
-                r++;
-            if(co == 1)
-                co++;
-            editorcfg.fileconts[r-1].data[co-1] = ' ';
-            write(STDOUT_FILENO," ",1);
-            if(editorcfg.ccol != 0)
-                editorcfg.ccol--;
+        break;
+        case DOWNARROW:
+            if(editorcfg.crow < editorcfg.rows-1){
+                editorcfg.crow--;
+            }
+        break;
+        case LEFTARROW:
+            if(editorcfg.ccol == 0){// go up
+                editorcfg.crow--;
+                if(editorcfg.fileconts[editorcfg.crow].len == 0){
+                    putcat(' ',0);
+                }
+                editorcfg.ccol = editorcfg.fileconts[editorcfg.crow].len-1;
+            }
+        break;
+        case RIGHTARROW:
+            if(editorcfg.ccol == editorcfg.fileconts[editorcfg.crow].len-1){// go down
+                if(editorcfg.crow > editorcfg.rows)
+                    editorcfg.crow++;
+                editorcfg.ccol = 0;
+            }
         break;
         default:
         printf("DEFAULT\r\n");
-        printf("at %d\r\n",editorcfg.crow);
             if(c == '\n')
             {
-                putcat('\r',editorcfg.ccol-1,&editorcfg.fileconts[editorcfg.crow-1]);
+                putcat('\r',editorcfg.ccol);
+                editorcfg.ccol = 0;
+                editorcfg.crow++;
+               //print /r/n
             }
-            printf("cur %d,%d, max %d,%d\r\n",editorcfg.ccol,editorcfg.crow,editorcfg.col,editorcfg.row);
-            printf("len: %d\r\n",editorcfg.fileconts[0].len);
+            putcat(c,editorcfg.ccol);
 
-            printf("PUTCAT\r\n");
-            putcat('\r',editorcfg.ccol-1,&editorcfg.fileconts[editorcfg.crow-1]);
-            editorcfg.crow++;
-            if(editorcfg.row  == editorcfg.crow){
-                // TODO : append to filconts
-              exit(1);
-            }
-            editorcfg.ccol = 0;
+          //print
+
     }
 }
 
@@ -151,11 +135,13 @@ void bufferinit(void)
  */
 void buffwrite()
 {
-    printf("WRITE\r\n");
+    printf("WRITE:");
+    char* str = editorcfg.fileconts[editorcfg.crow].data;
+    int crow = editorcfg.crow;
+    int ccol = editorcfg.ccol;
+    int len = editorcfg.fileconts[crow].len - ccol - 1; // -1 for 0 index array
 
-    write(STDOUT_FILENO,editorcfg.fileconts[editorcfg.crow].data,editorcfg.fileconts[editorcfg.crow].len);
-    // llfree(&appendbuf);// do i need free//
-    // appendbuf.data;
+    write(STDOUT_FILENO,str + ccol,len);
 }
 
 /**
@@ -167,37 +153,30 @@ void buffwrite()
 // there is a smarter way, to use a swp file and only load visible and near visible chars, but eh
 // what if i mmap lazily?
 void copytotemp(int fd, int size){
-    temp_file.size = size+2;
-    temp_file.buffer = (char*)malloc((sizeof(char)* size) + 2);
-    if(read(fd,temp_file.buffer,size) == -1){
-        printf("error copying file to ram errno: %d\n",errno);
-        rawmodedel();
+    char file[size];
+    if(read(fd,file,size) != size){
+        printf("There was an error when reading file from disk");
         exit(1);
     }
-    temp_file.buffer[size] = '\n';
-    temp_file.buffer[size+1] = '\r';
-    close(fd);
-    //
+    char buffer[BUFFER_SIZE];
     int i = 0;
     char c;
-    int rowcount = 0;
-    for(;i < temp_file.size+1; ++i){
-        c= temp_file.buffer[i];
+    int rowc = 0;
+    int colc = 0;
+    for(; i < size; ++i){
+        c = file[i];
+        buffer[colc] = c;
+        colc++;
         if(c == '\n'){
-           rowcount++;
+            editorcfg.fileconts[rowc].data = malloc(sizeof(char) * colc);
+            memcpy(editorcfg.fileconts[rowc].data,buffer,colc);
+            editorcfg.fileconts[rowc].len = colc;
+            editorcfg.fileconts[rowc].n = colc;
+            colc = 0;
+            rowc++;
+            editorcfg.rows++;
         }
     }
-    int row = 0;
-    editorcfg.fileconts = (struct list*)malloc(sizeof(struct list) * rowcount);// alloc once, instead of many times in loop, may have to alloc more, as use edits
-    for(i=0;i < temp_file.size+1; ++i){
-        c= temp_file.buffer[i];
-        if(c == '\n'){
-            row++;
-            continue;
-        }
-        append(&editorcfg.fileconts[row],&c,1);
-    }
-
 }
 
 /**
@@ -222,6 +201,12 @@ int main(int argc, char** argv)
     rawmodeinit();
     bufferinit();
     editoruiinit();
+    // i need only ping once, at start, keep track of key presses
+    if(cursorpos(&editorcfg.crow,&editorcfg.ccol) != 0)
+    {
+        printf("There was an error with the cursor\r\n");
+        return 1;
+    }
     while(1)
     {
         handlekey(readkey());
