@@ -34,7 +34,8 @@ struct edcfg{
     int col;    // total columns
     int crow;   //cursor row
     int ccol;   //cursor column
-    struct list* fileconts;
+    int* char_per_line;
+    char* fileconts;
 }editorcfg;
 
 #define max(a,b) (a>b)? a:b

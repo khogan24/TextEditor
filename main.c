@@ -16,7 +16,20 @@
 // struct termios original_term_settings;
 
 void copytotemp(int fd,int size){
-
+   editorcfg.fileconts = (char*) malloc(sizeof(char) * size);
+    read(fd,editorcfg.fileconts,size);
+    editorcfg.char_per_line = (int*)malloc(sizeof(int)*size);
+    int i = 0;
+    int col = 0;
+    int row = 0;
+    for(i; i < size; ++i){
+        col++;
+        if(editorcfg.fileconts[i] == '\n'){
+            editorcfg.char_per_line[row] = col;
+            row++;
+            col = 0;
+        }
+    }
 }
 
 /**
@@ -24,6 +37,7 @@ void copytotemp(int fd,int size){
 */
 void rawmodedel(void)
 {
+    free(editorcfg.char_per_line);
     clearterm();
     tcsetattr(STDIN_FILENO,TCSAFLUSH,&editorcfg.default_termios);
 }
@@ -178,7 +192,7 @@ int main(int argc, char** argv)
         copytotemp(original_fd,(int)(long)st.st_size);
     }
     rawmodeinit();
-    bufferinit();
+    // bufferinit();
     editoruiinit();
     while(1)
     {

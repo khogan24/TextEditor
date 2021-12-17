@@ -3,6 +3,7 @@
     "files.associations": {
         "cstdlib": "cpp",
         "limits": "c",
-        "*.tcc": "c"
+        "*.tcc": "c",
+        "errno.h": "c"
     }
 }
