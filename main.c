@@ -15,6 +15,10 @@
 
 // struct termios original_term_settings;
 
+void copytotemp(int fd,int size){
+
+}
+
 /**
  * return terminal to original mode
 */
@@ -151,52 +155,6 @@ void bufferinit(void)
  */
 void buffwrite()
 {
-    printf("WRITE\r\n");
-
-    write(STDOUT_FILENO,editorcfg.fileconts[editorcfg.crow].data,editorcfg.fileconts[editorcfg.crow].len);
-    // llfree(&appendbuf);// do i need free//
-    // appendbuf.data;
-}
-
-/**
- * @brief copies the contents of the file pointed to by fd into the in-memory buffer.
- * This is to allow fordiscarding of edits
- * 
- * @param fd file descriptor of the file opened
- */
-// there is a smarter way, to use a swp file and only load visible and near visible chars, but eh
-// what if i mmap lazily?
-void copytotemp(int fd, int size){
-    temp_file.size = size+2;
-    temp_file.buffer = (char*)malloc((sizeof(char)* size) + 2);
-    if(read(fd,temp_file.buffer,size) == -1){
-        printf("error copying file to ram errno: %d\n",errno);
-        rawmodedel();
-        exit(1);
-    }
-    temp_file.buffer[size] = '\n';
-    temp_file.buffer[size+1] = '\r';
-    close(fd);
-    //
-    int i = 0;
-    char c;
-    int rowcount = 0;
-    for(;i < temp_file.size+1; ++i){
-        c= temp_file.buffer[i];
-        if(c == '\n'){
-           rowcount++;
-        }
-    }
-    int row = 0;
-    editorcfg.fileconts = (struct list*)malloc(sizeof(struct list) * rowcount);// alloc once, instead of many times in loop, may have to alloc more, as use edits
-    for(i=0;i < temp_file.size+1; ++i){
-        c= temp_file.buffer[i];
-        if(c == '\n'){
-            row++;
-            continue;
-        }
-        append(&editorcfg.fileconts[row],&c,1);
-    }
 
 }
 
@@ -206,18 +164,18 @@ void copytotemp(int fd, int size){
 int main(int argc, char** argv)
 {
     original_fd = -1;
-    struct stat fileinf;
+    struct stat st;
     if(argc == 2){
         original_fd = open(argv[1], O_RDWR | O_CREAT | O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRUSR );
-        if(fstat(original_fd,&fileinf) == -1){
+        if(fstat(original_fd,&st) == -1){
             printf("error opening file %s\n", argv[1]);
             return 0;
         }
-        if(fileinf.st_mode  ==  S_IFDIR ){
+        if(st.st_mode  ==  S_IFDIR ){
             printf("will not open a directory\n");
             return 0;
         }
-        copytotemp(original_fd,(int)(long)fileinf.st_size);
+        copytotemp(original_fd,(int)(long)st.st_size);
     }
     rawmodeinit();
     bufferinit();
