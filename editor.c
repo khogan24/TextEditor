@@ -7,30 +7,50 @@
  * @return 0 on success, -1 on error
  * -- currently is O(n) for each char
 */
-int putcat(char c, int at, struct list * buf)
+int putcat(char c, int at)
 {
-    if (at < 0 || at > buf->len) at = buf->len;
-        buf->data = realloc(buf->data, buf->len + 2);
-    printf("COPY\r\n");
-    memmove(&buf->data[at + 1], &buf->data[at], buf->len - at + 1);
-    /**
-     * @note 
-         store pointers to location in LL, update O(1)
-         makes size double
-            extra bookkeeping to ensure accuracy
-        why have buffer if we just write every loop?
-    */
-
-    buf->len++;
-    // editorcfg.ccol++;
-    // if(editorcfg.ccol > editorcfg.col){
-    //     editorcfg.col++;
-    printf("insrt\r\n");
-    buf->data[at] = c;
-    // }
-    // editorUpdateRow(buf);
+    if(at < 0){
+        return -1;
+    }
+    if(at > editorcfg.len){
+        //grow
+        char* temp = (char*)malloc(sizeof(char)* at);
+        memset(temp,'\0',at);
+        memmove(temp,editorcfg.fileconts,editorcfg.len);
+        free(editorcfg.fileconts);
+        editorcfg.fileconts = temp;
+        editorcfg.len = at;
+    }
+    char* temp = (char*)malloc(sizeof(char) * editorcfg.len+1);
+    memcpy(temp,editorcfg.fileconts,editorcfg.index);
+    temp[editorcfg.index] = c;
+    memcpy(temp + editorcfg.index+1,editorcfg.fileconts + editorcfg.index,editorcfg.len - editorcfg.index);
+    free(editorcfg.fileconts);
+    editorcfg.fileconts = temp;
+    editorcfg.len++;
     return 0;
 }
+
+/**
+ * @brief removes a char at index, reduces size of buffer
+ * 
+ * @param at index of char to be removed
+ * 
+ */
+int remcat(int at){
+    if(at < 0 || at > editorcfg.len){
+        return -1;
+    }
+
+    char* temp = (char*)malloc(sizeof(char)*editorcfg.len-1);
+    memcpy(temp,editorcfg.fileconts,at);
+    memcpy(temp+at, editorcfg.fileconts + at, editorcfg.len - at);
+    free(editorcfg.fileconts);
+    editorcfg.fileconts = temp;
+    editorcfg.len--;
+    return 0;
+}
+
 
 void editorUpdateRow(struct list* buff)
 {

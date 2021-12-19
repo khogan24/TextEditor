@@ -19,17 +19,19 @@ void copytotemp(int fd,int size){
    editorcfg.fileconts = (char*) malloc(sizeof(char) * size);
     read(fd,editorcfg.fileconts,size);
     editorcfg.char_per_line = (int*)malloc(sizeof(int)*size);
-    int i = 0;
-    int col = 0;
-    int row = 0;
-    for(i; i < size; ++i){
-        col++;
-        if(editorcfg.fileconts[i] == '\n'){
-            editorcfg.char_per_line[row] = col;
-            row++;
-            col = 0;
-        }
-    }
+    editorcfg.len = size;
+    editorcfg.index = 0;
+    // int i = 0;
+    // int col = 0;
+    // int row = 0;
+    // for(i; i < size; ++i){
+    //     col++;
+    //     if(editorcfg.fileconts[i] == '\n'){
+    //         editorcfg.char_per_line[row] = col;
+    //         row++;
+    //         col = 0;
+    //     }
+    // }
 }
 
 /**
@@ -95,66 +97,39 @@ char readkey(void)
 #define BACKSPACE 127
 void handlekey(const char c)
 {
-    int r;
-    int co; 
     if(cursorpos(&editorcfg.crow,&editorcfg.ccol) != 0)
     {
         return;
     }
-    printf("at %d\r\n",editorcfg.crow);
-    if (editorcfg.crow > editorcfg.row){
+    if (editorcfg.crow > editorcfg.total_rows){
         exit(1);
-        editorcfg.crow = editorcfg.row-1;
+        editorcfg.crow = editorcfg.total_rows-1;
     }
     if (editorcfg.ccol > editorcfg.col){
        editorcfg.ccol =0;
     }
 
+    int i = 0;
     switch (c)
     {
         case '!':
-            exit(0);
+        printf("len = %d\r\n",editorcfg.len);
+        for(;i < editorcfg.len; ++i){
+            printf("%c",editorcfg.fileconts[i]);
+        }
+        exit(0);
         break;
-        case '?':
-        
-        if(r == 0)
-            r++;
-        if(co == 0)
-            co++;
-        printf("%c\r\n",editorcfg.fileconts[r-1].data[co-1]);
-        break;
-        case BACKSPACE: // debug, never actually gets here
-            if(cursorpos(&r,&co) != 0)
-            {
-                break;
-            }
-            if(r == 1)
-                r++;
-            if(co == 1)
-                co++;
-            editorcfg.fileconts[r-1].data[co-1] = ' ';
-            write(STDOUT_FILENO," ",1);
-            if(editorcfg.ccol != 0)
-                editorcfg.ccol--;
+        case BACKSPACE:
+            remcat(editorcfg.index);
+            editorcfg.index--;
         break;
         default:
-        printf("DEFAULT\r\n");
-        printf("at %d\r\n",editorcfg.crow);
-            if(c == '\n')
-            {
-                putcat('\r',editorcfg.ccol-1,&editorcfg.fileconts[editorcfg.crow-1]);
-            }
-            printf("cur %d,%d, max %d,%d\r\n",editorcfg.ccol,editorcfg.crow,editorcfg.col,editorcfg.row);
-            printf("len: %d\r\n",editorcfg.fileconts[0].len);
-
-            printf("PUTCAT\r\n");
-            putcat('\r',editorcfg.ccol-1,&editorcfg.fileconts[editorcfg.crow-1]);
-            editorcfg.crow++;
-            if(editorcfg.row  == editorcfg.crow){
-                // TODO : append to filconts
-              exit(1);
-            }
-            editorcfg.ccol = 0;
+        putcat(c,editorcfg.index);
+        editorcfg.index++;
+        if(c == '\n'){
+            putcat('\r',editorcfg.index);
+            editorcfg.index++;
+        }
     }
 }
 
@@ -194,11 +169,11 @@ int main(int argc, char** argv)
     rawmodeinit();
     // bufferinit();
     editoruiinit();
+    write(STDOUT_FILENO, "\x1b[H", 3);
     while(1)
     {
         handlekey(readkey());
         buffwrite();
     }
-    free(temp_file.buffer);
     return 0;
 }

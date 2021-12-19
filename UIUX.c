@@ -11,14 +11,14 @@ void clearterm(void)
 void editoruiinit(void)
 {
     clearterm();
-    if(windowsize(&(editorcfg.row),&(editorcfg.col)) !=0)
+    if(windowsize(&(editorcfg.total_rows),&(editorcfg.col)) !=0)
     {
         panic("ERR: winsize");
     }
     int i = 1;
     if(original_fd < 0){
 
-    for(;i < editorcfg.row; ++i)
+    for(;i < editorcfg.total_rows; ++i)
         write(STDOUT_FILENO,"-\r\n",3);
     write(STDOUT_FILENO,"-",1);
     }

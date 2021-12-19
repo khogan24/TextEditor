@@ -30,10 +30,12 @@ struct list {
 
 struct edcfg{
     struct termios default_termios;
-    int row; // total rows
+    int total_rows; // total rows
     int col;    // total columns
     int crow;   //cursor row
     int ccol;   //cursor column
+    int index;
+    int len;
     int* char_per_line;
     char* fileconts;
 }editorcfg;
@@ -101,7 +103,8 @@ int windowsize(int*, int*);
 int cursorpos(int*, int *);
 void editoruiinit(void);
 void clearterm(void);
-int putcat(char c, int at, struct list * buf);
+int putcat(char c, int at);
+int remcat(int at);
 int original_fd;
 struct {
     int size;
