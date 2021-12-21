@@ -105,6 +105,9 @@ void editoruiinit(void);
 void clearterm(void);
 int putcat(char c, int at);
 int remcat(int at);
+void mcusorleft(int x);
+void mcusorright(int x);
+
 void showbuff();
 int original_fd;
 struct {

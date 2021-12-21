@@ -112,6 +112,12 @@ void handlekey(const char c)
     int i = 0;
     switch (c)
     {
+        case 'k':
+            mcusorleft(1);
+        break;
+        case 'l':
+            mcusorright(1);
+        break;
         case '!':
         printf("len = %d\r\n",editorcfg.len);
         printf("rowc: %d\r\n",editorcfg.total_rows);

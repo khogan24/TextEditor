@@ -79,3 +79,13 @@ int windowsize(int *r, int *c)
     *c = w.ws_col;
     return 0;
 }
+
+void mcusorleft(int x){
+    printf("\033[%dC", (x));
+    editorcfg.index--;
+}
+
+void mcusorright(int x){
+    printf("\033[%dD", (x));
+    editorcfg.index++;
+}
