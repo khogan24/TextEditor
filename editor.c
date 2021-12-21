@@ -63,7 +63,16 @@ void editorUpdateRow(struct list* buff)
  * @param buf current buffer of changes made
  * @return int number of bytes writen
  */
-int buf_write(struct list * buf)
+void showbuff()
 {
-    return -1;
+    int i = 0;
+    char c;
+    for(;i<editorcfg.len;++i){
+        c = editorcfg.fileconts[i];
+        write(STDOUT_FILENO,&c,1);
+        if(c == '\n'){
+            c = '\r';
+            write(STDOUT_FILENO,&c,1);
+        }
+    }
 }

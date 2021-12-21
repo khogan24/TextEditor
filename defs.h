@@ -105,6 +105,7 @@ void editoruiinit(void);
 void clearterm(void);
 int putcat(char c, int at);
 int remcat(int at);
+void showbuff();
 int original_fd;
 struct {
     int size;

@@ -114,6 +114,7 @@ void handlekey(const char c)
     {
         case '!':
         printf("len = %d\r\n",editorcfg.len);
+        printf("rowc: %d\r\n",editorcfg.total_rows);
         for(;i < editorcfg.len; ++i){
             printf("%c",editorcfg.fileconts[i]);
         }
@@ -129,6 +130,7 @@ void handlekey(const char c)
         if(c == '\n'){
             putcat('\r',editorcfg.index);
             editorcfg.index++;
+            editorcfg.total_rows++;// this will need some implementation
         }
     }
 }
@@ -144,7 +146,8 @@ void bufferinit(void)
  */
 void buffwrite()
 {
-
+    clearterm();
+    showbuff(); 
 }
 
 /**
