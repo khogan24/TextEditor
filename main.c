@@ -16,22 +16,22 @@
 // struct termios original_term_settings;
 
 void copytotemp(int fd,int size){
-   editorcfg.fileconts = (char*) malloc(sizeof(char) * size);
+    editorcfg.fileconts = (char*) malloc(sizeof(char) * size);
     read(fd,editorcfg.fileconts,size);
     editorcfg.char_per_line = (int*)malloc(sizeof(int)*size);
     editorcfg.len = size;
     editorcfg.index = 0;
-    // int i = 0;
-    // int col = 0;
-    // int row = 0;
-    // for(i; i < size; ++i){
-    //     col++;
-    //     if(editorcfg.fileconts[i] == '\n'){
-    //         editorcfg.char_per_line[row] = col;
-    //         row++;
-    //         col = 0;
-    //     }
-    // }
+    int i = 0;
+    int col = 0;
+    int row = 0;
+    for(; i < size-1; ++i){
+        col++;
+        if(editorcfg.fileconts[i] == '\n'){
+            editorcfg.char_per_line[row] = col;
+            row++;
+            col = 0;
+        }
+    }
 }
 
 /**
@@ -85,6 +85,7 @@ char readkey(void)
 {
     int n;
     char c;
+   fflush(STDIN_FILENO ); 
     while((n = read(STDIN_FILENO,&c,1)) != 1)
     {
         if(n == -1 && errno != EAGAIN)
@@ -111,13 +112,18 @@ void handlekey(const char c)
 
     int i = 0;
     switch (c)
-    {
-        case 'k':
+    {// some testing cases, will move to arrows later
+        case CTRL_KEY('k'):
             mcusorleft(1);
         break;
-        case 'l':
+        case CTRL_KEY('l'):
             mcusorright(1);
         break;
+	case CTRL_KEY('s'):
+		// write buff to file
+		printf("writing %d bytes to file : %d\n\r",editorcfg.len,original_fd);
+		write(original_fd ,editorcfg.fileconts, editorcfg.len );
+	exit(1);
         case '!':
         printf("len = %d\r\n",editorcfg.len);
         printf("rowc: %d\r\n",editorcfg.total_rows);
@@ -174,9 +180,11 @@ int main(int argc, char** argv)
             return 0;
         }
         copytotemp(original_fd,(int)(long)st.st_size);
+   
+    
     }
     rawmodeinit();
-    // bufferinit();
+    // bufferinit()
     editoruiinit();
     write(STDOUT_FILENO, "\x1b[H", 3);
     while(1)

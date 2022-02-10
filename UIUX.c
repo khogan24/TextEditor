@@ -25,7 +25,7 @@ void editoruiinit(void)
     else{
         clearterm();
          int i = 0; 
-        for(;i<temp_file.size + 1;++i)// need this because no default carriage return
+        for(;i<temp_file.size ;++i)// need this because no default carriage return
         {
             write(STDOUT_FILENO,temp_file.buffer + i,1);
             if(temp_file.buffer[i] == '\n')

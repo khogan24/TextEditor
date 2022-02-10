@@ -109,7 +109,7 @@ void mcusorleft(int x);
 void mcusorright(int x);
 
 void showbuff();
-int original_fd;
+int original_fd;// orig file, do nothing if no edits made
 struct {
     int size;
     char* buffer;
